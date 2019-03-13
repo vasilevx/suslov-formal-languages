@@ -5,6 +5,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <queue>
+#include <stack>
 
 using namespace std;
 
@@ -57,25 +58,20 @@ void loadMatrix() {
         undirectedList.push_back(vector<int>());
 
         for(int i = 0; i < line.size(); i++) {
+            if (i == 0) continue;
             if (line[i] != 32) {
                 directedList.back().push_back((int)line[i] - (int)'0');
             }         
         }
     }
 
-    for (int i = 0; i < directedList.size(); i++) {
-        undirectedList[i].push_back(directedList[i][0]);
-    }
     for (int i = 0; i < directedList.size(); i++) {        
         for (int j = 0; j < directedList[i].size(); j++) {
-            if (j > 0) {
                 undirectedList[i].push_back(directedList[i][j]);
-                undirectedList[directedList[i][j]].push_back(directedList[i][0]);
-                
-            }
+                undirectedList[directedList[i][j]].push_back(i);
+            
         }
     }
-
 }
 
 void printGraph(vector <vector<int> > graph) {
@@ -92,30 +88,48 @@ void printGraph(vector <vector<int> > graph) {
 void bfs_matrix(vector <vector<int> > graph, int start) {
     queue<int> q;
     int n = graph.size();
+    vector<int> nodes(n);
+    for (int i = 0; i < n; i++) {
+        nodes[i] = 0;
+    }
     q.push(start);
-    vector<bool> used (n);
-    vector<int> d(n), p(n);
-    used[start] = true;
-    p[start] = -1;
     while (!q.empty()) {
-        int v = q.front();
+        int node = q.front();
         q.pop();
-        for (int i=0; i<graph[v].size(); ++i) {
-            int to = graph[v][i];
-            if (!used[to]) {
-                used[to] = true;
-                q.push (to);
-                d[to] = d[v] + 1;
-                p[to] = v;
+        nodes[node] = 2;//Посещена
+        for (int i = 0; i < n; i++) {
+            if (graph[node][i] == 1 && nodes[i] == 0) {
+                q.push(i);
+                nodes[i] = 1;//Обнаружена
             }
         }
-    }   
-
-    for (int i = 0; i < used.size(); i++) {
-        cout << used[i] << "-->";
+        cout << verticesNames[node] << " ";
     }
+    cout << endl;   
+}
 
-
+void dfs_matrix(vector <vector<int> > graph, int start) {
+    stack<int> s;
+    int n = graph.size();
+    vector<int> nodes(n);
+    for (int i = 0; i < n; i++) {
+        nodes[i] = 0;
+    }
+    s.push(start);
+    while (!s.empty()) {
+        int node = s.top();
+        s.pop();
+        if (nodes[node] == 2) continue;
+        nodes[node] = 2;
+        for (int i = n - 1; i >= 0; i--) {
+            if (graph[node][i] == 1 && nodes[i] != 2) {
+                s.push(i);
+                nodes[i] = 1;
+            }
+        }
+        cout << verticesNames[node] << " ";
+    }
+    cout << endl;   
 }
 
 int main() {
@@ -133,22 +147,42 @@ int main() {
         switch(switcher) {
             case '1': 
                 printGraph(directedMatrix);
-                bfs_matrix(directedMatrix, 2);
+                cout << "BFS:\n";
+                for (int i = 0; i < 5; i++)
+                    bfs_matrix(directedMatrix, i);
+                cout << "DFS:\n";
+                for (int i = 0; i < 5; i++)
+                    dfs_matrix(directedMatrix, i);
             break;
             case '2': 
                 printGraph(undirectedMatrix);
-                bfs_matrix(undirectedMatrix, 0);
+                cout << "BFS:\n";
+                for (int i = 0; i < 5; i++)
+                    bfs_matrix(undirectedMatrix, i);
+                cout << "DFS:\n";
+                for (int i = 0; i < 5; i++)
+                    dfs_matrix(undirectedMatrix, i);
             break;
             case '3': 
                 printGraph(directedList);
+                // cout << "BFS:\n";
+                // for (int i = 0; i < 5; i++)
+                //     bfs_matrix(directedList, i);
+                // cout << "DFS:\n";
+                // for (int i = 0; i < 5; i++)
+                //     dfs_matrix(directedList, i);
             break;
             case '4': 
                 printGraph(undirectedList);
+                // cout << "BFS:\n";
+                // for (int i = 0; i < 5; i++)
+                //     bfs_matrix(undirectedList, i);
+                // cout << "DFS:\n";
+                // for (int i = 0; i < 5; i++)
+                //     dfs_matrix(undirectedList, i);
             break;
         }
         system("pause");
-
-    }
-    
+    }    
     return 0;
 }
