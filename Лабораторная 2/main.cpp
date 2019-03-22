@@ -109,25 +109,22 @@ void bfs_matrix(vector <vector<int> > graph, int start) {
 }
 
 void dfs_matrix(vector <vector<int> > graph, int start) {
+    int n = graph.size(); 
     stack<int> s;
-    int n = graph.size();
-    vector<int> nodes(n);
-    for (int i = 0; i < n; i++) {
-        nodes[i] = 0;
-    }
+    vector<bool> visited(n, false);
     s.push(start);
     while (!s.empty()) {
-        int node = s.top();
+        start = s.top();
         s.pop();
-        if (nodes[node] == 2) continue;
-        nodes[node] = 2;
-        for (int i = n - 1; i >= 0; i--) {
-            if (graph[node][i] == 1 && nodes[i] != 2) {
+        if (!visited[start]) {
+            cout << verticesNames[start] << " ";
+            visited[start] = true;
+        }
+        for (int i = 0; i < n; i++) {
+            if (!visited[i] && graph[start][i] != 0) {
                 s.push(i);
-                nodes[i] = 1;
             }
         }
-        cout << verticesNames[node] << " ";
     }
     cout << endl;   
 }
