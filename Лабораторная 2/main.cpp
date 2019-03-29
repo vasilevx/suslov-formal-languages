@@ -6,185 +6,272 @@
 #include <windows.h>
 #include <queue>
 #include <stack>
+#include <list>
 #include <iomanip>
-
 using namespace std;
-
 const char verticesNames[5] = { 'A', 'B', 'C', 'D', 'E'};
-vector<vector<int> > directedMatrix;
-vector<vector<int> > undirectedMatrix;  
-vector<vector<int> > directedList;  
-vector<vector<int> > undirectedList;
 
-vector<vector<int> > incidenceMatrix;
-int vCounter = 0;
-int eCounter = 0;
+class Graph {
+protected:
+    int vCounter = 0;
+    int eCounter = 0;
+    vector<vector<int> > incidenceMatrix;
+    virtual void printGraph() {};
+    virtual void dfs(int startNode) {};
+    virtual void bfs(int startNode) {};
+    virtual void makeIncidenceMatrix() {};
+public:
+    virtual void loadGraph(string filename) {};
 
-void print_incidence_matrix() {
-    cout << "\n ";
-    for (int i = 0; i < eCounter; i++) {
-        cout << setw(2) << 'E' << i + 1 << " ";
-    }
-    cout << endl;
-    for (int i = 0; i < vCounter; ++i) {
-        cout <<  verticesNames[i];
-        for (int j = 0; j <	 eCounter; ++j) {
-            cout << setw(3) << incidenceMatrix[i][j] << " ";
+    void printIncidenceMatrix() {
+        cout << "\n ";
+        for (int i = 0; i < eCounter; i++) {
+            cout << setw(3) << i + 1 << " ";
         }
         cout << endl;
-    }
-}
+        for (int i = 0; i < vCounter; i++) {
+            cout <<  verticesNames[i];
+            for (int j = 0; j <	 eCounter; j++) {
+                cout << setw(3) << incidenceMatrix[i][j] << " ";
+            }
+            cout << endl;
+        }
+    };
 
-void makeIncidenceMatrix__matrix(vector<vector<int> > adjMatrix) {
-    for (int i = 0; i < vCounter; ++i) {
-        incidenceMatrix.push_back(vector<int>(eCounter));
-        for (int j = 0; j < eCounter; ++j) {
-            incidenceMatrix[i][j] = 0;
+
+    void outputAll(bool directed) {
+        cout << "\nGraph:";
+        printGraph();
+        if (directed) {
+            cout << "\nIncidence matrix:";
+            makeIncidenceMatrix();
+            printIncidenceMatrix();
+        }
+        cout << "\nBFS:\n";
+        for (int i = 0; i < vCounter; i++)
+            bfs(i);
+        cout << "\nDFS:\n";
+        for (int i = 0; i < vCounter; i++)
+            dfs(i);
+        cout << endl;
+    }
+};
+
+
+class matrixGraph: public Graph {
+private:
+    vector<vector<int> > adjacencyMatrix;
+
+    void printGraph() {
+        cout << "\n ";
+        for (int i = 0; i < vCounter; i++) {
+            cout << setw(3) << verticesNames[i];
+        }
+        cout << endl;
+        for (int i = 0; i < vCounter; i++) {
+            cout << verticesNames[i];
+            for (int j = 0; j < vCounter; j++)
+                cout << setw(3) << adjacencyMatrix[i][j];
+            cout << '\n';
         }
     }
 
-    int edge = 0;
 
-    for (int i = 0; i < vCounter; ++i) {
-        for (int j = 0; j < i; ++j) {
-            if (adjMatrix[i][j] == 1 && adjMatrix[j][i] == 0) {
+    void makeIncidenceMatrix() {
+        for (int i = 0; i < vCounter; i++) {
+            for (int j = 0; j <	i; j++) {
+                if (adjacencyMatrix[i][j] || adjacencyMatrix[j][i]) {
+                    eCounter++;
+                }
+            }
+        }        
+        for (int i = 0; i < vCounter; i++) {
+            incidenceMatrix.push_back(vector<int>(eCounter));
+            for (int j = 0; j < eCounter; j++) {
+                incidenceMatrix[i][j] = 0;
+            }
+        }
+        int edge = 0;
+        for (int i = 0; i < vCounter; i++) {
+            for (int j = 0; j < i; j++) {
+                if (adjacencyMatrix[i][j] == 1 && adjacencyMatrix[j][i] == 0) {
+                    incidenceMatrix[i][edge] = 1;
+                    incidenceMatrix[j][edge++] = -1;
+                }
+                else if (adjacencyMatrix[i][j] == 0 && adjacencyMatrix[j][i] == 1) {
+                    incidenceMatrix[i][edge] = -1;
+                    incidenceMatrix[j][edge++] = 1;
+                }
+            }
+        }
+    }
+
+
+    void bfs(int startNode) {
+        queue<int> q;
+        vector<bool> visited(vCounter, false);
+        q.push(startNode);
+        while (!q.empty()) {
+            startNode = q.front();
+            q.pop();
+            if (!visited[startNode]) {
+                cout << verticesNames[startNode] << " ";
+                visited[startNode] = true;
+            }
+            for (int i = 0; i < vCounter; i++) {
+                if (!visited[i] && adjacencyMatrix[startNode][i] != 0) {
+                    q.push(i);
+                }
+            }
+        }
+        cout << endl;   
+    }   
+    
+
+    void dfs(int startNode) {
+        stack<int> s;
+        vector<bool> visited(vCounter, false);
+        s.push(startNode);
+        while (!s.empty()) {
+            startNode = s.top();
+            s.pop();
+            if (!visited[startNode]) {
+                cout << verticesNames[startNode] << " ";
+                visited[startNode] = true;
+            }
+            for (int i = 0; i < vCounter; i++) {
+                if (!visited[i] && adjacencyMatrix[startNode][i] != 0) {
+                    s.push(i);
+                }
+            }
+        }
+        cout << endl;   
+    }
+
+public:
+    void loadGraph(string filename) {
+        string line;
+        ifstream matrixStream(filename);
+        if(!matrixStream) {
+            cout << "Error\n";
+            return;
+        }
+        while(getline(matrixStream, line)) {
+            adjacencyMatrix.push_back(vector<int>());
+            vCounter++;
+            for(int i = 0; i < line.size(); i++) {
+                if (line[i] != 32) {
+                    adjacencyMatrix.back().push_back((int)line[i] - (int)'0');
+                }            
+            }
+        }
+    }    
+};
+
+
+class listGraph: public Graph {
+private:
+    vector<list<int> > adjacencyList;
+
+    void printGraph() {
+        cout << "\n";
+        for (int i = 0; i < vCounter; i++) {
+            cout << verticesNames[i] << ":";
+            list<int>::iterator it;
+            for (it = adjacencyList[i].begin(); it != adjacencyList[i].end(); it++)
+                cout << setw(2) << verticesNames[*it];
+            cout << '\n';
+        }
+    }
+
+
+    void makeIncidenceMatrix() {
+        for (int i = 0; i < vCounter; i++) {
+            eCounter += adjacencyList[i].size();
+        }        
+        for (int i = 0; i < vCounter; i++) {
+            incidenceMatrix.push_back(vector<int>(eCounter));
+            for (int j = 0; j < eCounter; j++) {
+                incidenceMatrix[i][j] = 0;
+            }
+        }
+        int edge = 0;
+        for (int i = 0; i < vCounter; i++) {
+            for (int j = 0; j < adjacencyList[i].size(); j++) {
                 incidenceMatrix[i][edge] = 1;
-                incidenceMatrix[j][edge++] = -1;
-            }
-            else if (adjMatrix[i][j] == 0 && adjMatrix[j][i] == 1) {
-                incidenceMatrix[i][edge] = -1;
-                incidenceMatrix[j][edge++] = 1;
-            }
-        }
-    }
-}
-
-
-void loadMatrix() {
-    string line;
-    ifstream matrixStream("graphMatrix_directed.txt");
-    
-    if(!matrixStream) {
-        cout << "Error\n";
-        return;
-    }
-
-    while(getline(matrixStream, line)) {
-        directedMatrix.push_back(vector<int>());
-        undirectedMatrix.push_back(vector<int>());
-
-        for(int i = 0; i < line.size(); i++) {
-            if (line[i] != 32) {
-                directedMatrix.back().push_back((int)line[i] - (int)'0');
-                undirectedMatrix.back().push_back(0);
-            }            
-        }
-    }
-
-    vCounter = directedMatrix.size();
-    for (int i = 0; i < vCounter; ++i) {
-        for (int j = 0; j <	 i; ++j) {
-            if (directedMatrix[i][j] || directedMatrix[j][i]) {
-                eCounter++;
-            }
-        }
-    }
-    
-    for (int i = 0; i < directedMatrix.size(); i++) {
-        for (int j = 0; j < directedMatrix[i].size(); j++) {
-            if (directedMatrix[i][j] == 1) {
-                undirectedMatrix[i][j] = 1;
-                undirectedMatrix[j][i] = 1;
+                list<int>::iterator it = adjacencyList[i].begin();
+                advance(it, j);
+                incidenceMatrix[*it][edge] = -1;
+                edge++;
             }
         }
     }
 
-    
-    ifstream listStream("graphList_directed.txt");    
-    if(!listStream) {
-        cout << "Error\n";
-        return;
-    }
-    
-    while(getline(listStream, line)) {
-        directedList.push_back(vector<int>());
-        undirectedList.push_back(vector<int>());
 
-        for(int i = 0; i < line.size(); i++) {
-            if (i == 0) continue;
-            if (line[i] != 32) {
-                directedList.back().push_back((int)line[i] - (int)'0');
-            }         
-        }
-    }
-
-    for (int i = 0; i < directedList.size(); i++) {        
-        for (int j = 0; j < directedList[i].size(); j++) {
-                undirectedList[i].push_back(directedList[i][j]);
-                undirectedList[directedList[i][j]].push_back(i);            
-        }
-    }
-}
-
-void printGraphMatrix(vector <vector<int> > graph) {
-    cout << "\n  ";
-    for (int i = 0; i < graph.size(); i++) {
-        cout << verticesNames[i] << ' ';
-    }
-    cout << endl;
-    for (int i = 0; i < graph.size(); i++) {
-        cout << verticesNames[i] << ' ';
-        for (int j = 0; j < graph[i].size(); j++)
-            cout << graph[i][j] << ' ';
-        cout << '\n';
-    }
-}
-
-void bfs_matrix(vector <vector<int> > graph, int startNode) {
-    int n = graph.size();
-    queue<int> q;
-    vector<bool> visited(n, false);
-    q.push(startNode);
-    while (!q.empty()) {
-        startNode = q.front();
-        q.pop();
-        if (!visited[startNode]) {
-            cout << verticesNames[startNode] << " ";
-            visited[startNode] = true;
-        }
-        for (int i = 0; i < n; i++) {
-            if (!visited[i] && graph[startNode][i] != 0) {
-                q.push(i);
+    void bfs(int startNode) {
+        queue<int> q;
+        vector<bool> visited(vCounter, false);
+        q.push(startNode);
+        while (!q.empty()) {
+            startNode = q.front();
+            q.pop();
+            if (!visited[startNode]) {
+                cout << verticesNames[startNode] << " ";
+                visited[startNode] = true;
+            }
+            for (list<int>::iterator it = adjacencyList[startNode].begin(); it != adjacencyList[startNode].end(); it++) {
+                if (!visited[*it]) {
+                    q.push(*it);
+                }
             }
         }
-    }
-    cout << endl;   
-}
+        cout << endl;   
+    }   
 
-void dfs_matrix(vector <vector<int> > graph, int startNode) {
-    int n = graph.size(); 
-    stack<int> s;
-    vector<bool> visited(n, false);
-    s.push(startNode);
-    while (!s.empty()) {
-        startNode = s.top();
-        s.pop();
-        if (!visited[startNode]) {
-            cout << verticesNames[startNode] << " ";
-            visited[startNode] = true;
-        }
-        for (int i = 0; i < n; i++) {
-            if (!visited[i] && graph[startNode][i] != 0) {
-                s.push(i);
+
+    void dfs(int startNode) {
+        stack<int> s;
+        vector<bool> visited(vCounter, false);
+        s.push(startNode);
+        while (!s.empty()) {
+            startNode = s.top();
+            s.pop();
+            if (!visited[startNode]) {
+                cout << verticesNames[startNode] << " ";
+                visited[startNode] = true;
+            }
+            for (list<int>::iterator it = adjacencyList[startNode].begin(); it != adjacencyList[startNode].end(); it++) {
+                if (!visited[*it]) {
+                    s.push(*it);
+                }
             }
         }
+        cout << endl;   
     }
-    cout << endl;   
-}
+
+public:
+    void loadGraph(string filename) {
+        string line;
+        ifstream matrixStream(filename);
+        if(!matrixStream) {
+            cout << "Error\n";
+            return;
+        }
+        while(getline(matrixStream, line)) {
+            adjacencyList.push_back(list<int>());
+            vCounter++;
+            for(int i = 1; i < line.size(); i++) {
+                if (line[i] != 32) {
+                    adjacencyList.back().push_back((int)line[i] - (int)'0');
+                }            
+            }
+        }
+    } 
+};
+
 
 int main() {
     char switcher;
-    loadMatrix();
     while(switcher != 27) {
         system("cls");
         cout << "1 - Matrix (Directed)\n"
@@ -193,47 +280,30 @@ int main() {
             << "4 - List (Undirected)\n"
             << "ESC - Quit\n";
         switcher = getch();
-
         switch(switcher) {
-            case '1': 
-                cout << "\nAdjacency matrix:";
-                printGraphMatrix(directedMatrix);
-                cout << "\nIncidence matrix:";
-                makeIncidenceMatrix__matrix(directedMatrix);
-                print_incidence_matrix();
-                cout << "\nBFS:\n";
-                for (int i = 0; i < 5; i++)
-                    bfs_matrix(directedMatrix, i);
-                cout << "\nDFS:\n";
-                for (int i = 0; i < 5; i++)
-                    dfs_matrix(directedMatrix, i);
+            case '1': {
+                matrixGraph graph = matrixGraph();
+                graph.loadGraph("graphMatrix_directed.txt");
+                graph.outputAll(true);
+            }
             break;
-            case '2': 
-                printGraphMatrix(undirectedMatrix);
-                cout <<"\nBFS:\n";
-                for (int i = 0; i < 5; i++)
-                    bfs_matrix(undirectedMatrix, i);
-                cout << "\nDFS:\n";
-                for (int i = 0; i < 5; i++)
-                    dfs_matrix(undirectedMatrix, i);
+            case '2': {
+                matrixGraph graph = matrixGraph();
+                graph.loadGraph("graphMatrix_undirected.txt");
+                graph.outputAll(false);
+            }
             break;
-            case '3': 
-                //printGraph(directedList);
-                // cout << "BFS:\n";
-                // for (int i = 0; i < 5; i++)
-                //     bfs_matrix(directedList, i);
-                // cout << "DFS:\n";
-                // for (int i = 0; i < 5; i++)
-                //     dfs_matrix(directedList, i);
+            case '3': {
+                listGraph graph = listGraph();
+                graph.loadGraph("graphList_directed.txt");
+                graph.outputAll(true);
+            }
             break;
-            case '4': 
-                //printGraph(undirectedList);
-                // cout << "BFS:\n";
-                // for (int i = 0; i < 5; i++)
-                //     bfs_matrix(undirectedList, i);
-                // cout << "DFS:\n";
-                // for (int i = 0; i < 5; i++)
-                //     dfs_matrix(undirectedList, i);
+            case '4': {
+                listGraph graph = listGraph();
+                graph.loadGraph("graphList_undirected.txt");
+                graph.outputAll(false);
+            }
             break;
         }
         system("pause");
