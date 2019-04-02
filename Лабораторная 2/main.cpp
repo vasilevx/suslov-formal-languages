@@ -24,15 +24,19 @@ public:
     virtual void loadGraph(string filename) {};
 
     void printIncidenceMatrix() {
-        cout << "\n ";
+        cout << "\n  ";
         for (int i = 0; i < eCounter; i++) {
-            cout << setw(3) << i + 1 << " ";
+            int from = -1, to = -1;
+            for (int j = 0; j < vCounter; j++) {
+                incidenceMatrix[j][i] == 1 ? from = j : incidenceMatrix[j][i] == -1 ? to = j: NULL;
+            }
+            cout << setw(4) << verticesNames[from] << " -> " << verticesNames[to];
         }
         cout << endl;
         for (int i = 0; i < vCounter; i++) {
-            cout <<  verticesNames[i];
+            cout << verticesNames[i];
             for (int j = 0; j <	 eCounter; j++) {
-                cout << setw(3) << incidenceMatrix[i][j] << " ";
+                cout << right <<  setw(8) <<  incidenceMatrix[i][j] << " ";
             }
             cout << endl;
         }
