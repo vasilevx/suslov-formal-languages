@@ -44,17 +44,17 @@ public:
 
 
     void outputAll(bool directed) {
-        cout << "\nGraph:";
+        cout << "\n";
         printGraph();
         if (directed) {
             cout << "\nIncidence matrix:";
             makeIncidenceMatrix();
             printIncidenceMatrix();
         }
-        cout << "\nBFS:\n";
+        cout << "\nBreadth-first search:\n";
         for (int i = 0; i < vCounter; i++)
             bfs(i);
-        cout << "\nDFS:\n";
+        cout << "\nDepth-first search:\n";
         for (int i = 0; i < vCounter; i++)
             dfs(i);
         cout << endl;
@@ -65,9 +65,9 @@ public:
 class matrixGraph: public Graph {
 private:
     vector<vector<int> > adjacencyMatrix;
-
+    
     void printGraph() {
-        cout << "\n ";
+        cout << "Adjacency matrix:\n ";
         for (int i = 0; i < vCounter; i++) {
             cout << setw(3) << verticesNames[i];
         }
@@ -115,11 +115,13 @@ private:
         queue<int> q;
         vector<bool> visited(vCounter, false);
         q.push(startNode);
+        visited[startNode] = true;
+        cout << verticesNames[startNode];
         while (!q.empty()) {
             startNode = q.front();
             q.pop();
             if (!visited[startNode]) {
-                cout << verticesNames[startNode] << " ";
+                cout << " -> " << verticesNames[startNode];
                 visited[startNode] = true;
             }
             for (int i = 0; i < vCounter; i++) {
@@ -136,11 +138,13 @@ private:
         stack<int> s;
         vector<bool> visited(vCounter, false);
         s.push(startNode);
+        visited[startNode] = true;
+        cout << verticesNames[startNode];
         while (!s.empty()) {
             startNode = s.top();
             s.pop();
             if (!visited[startNode]) {
-                cout << verticesNames[startNode] << " ";
+                cout << " -> "<< verticesNames[startNode];
                 visited[startNode] = true;
             }
             for (int i = 0; i < vCounter; i++) {
@@ -178,7 +182,7 @@ private:
     vector<list<int> > adjacencyList;
 
     void printGraph() {
-        cout << "\n";
+        cout << "Adjacency list:\n";
         for (int i = 0; i < vCounter; i++) {
             cout << verticesNames[i] << ":";
             list<int>::iterator it;
@@ -216,11 +220,13 @@ private:
         queue<int> q;
         vector<bool> visited(vCounter, false);
         q.push(startNode);
+        visited[startNode] = true;
+        cout << verticesNames[startNode];
         while (!q.empty()) {
             startNode = q.front();
             q.pop();
             if (!visited[startNode]) {
-                cout << verticesNames[startNode] << " ";
+                cout << " -> " << verticesNames[startNode];
                 visited[startNode] = true;
             }
             for (list<int>::iterator it = adjacencyList[startNode].begin(); it != adjacencyList[startNode].end(); it++) {
@@ -237,11 +243,13 @@ private:
         stack<int> s;
         vector<bool> visited(vCounter, false);
         s.push(startNode);
+        visited[startNode] = true;
+        cout << verticesNames[startNode];
         while (!s.empty()) {
             startNode = s.top();
             s.pop();
             if (!visited[startNode]) {
-                cout << verticesNames[startNode] << " ";
+                cout << " -> " << verticesNames[startNode];
                 visited[startNode] = true;
             }
             for (list<int>::iterator it = adjacencyList[startNode].begin(); it != adjacencyList[startNode].end(); it++) {
